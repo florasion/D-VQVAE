@@ -1,0 +1,13 @@
+LICENSE
+README.md
+setup.py
+MANO.egg-info/PKG-INFO
+MANO.egg-info/SOURCES.txt
+MANO.egg-info/dependency_links.txt
+MANO.egg-info/requires.txt
+MANO.egg-info/top_level.txt
+mano/__init__.py
+mano/joints_info.py
+mano/lbs.py
+mano/model.py
+mano/utils.py
