@@ -183,12 +183,9 @@ if __name__ == '__main__':
     device_num = 1
 
     # network
-    model = affordanceNet(
-        obj_inchannel=args.obj_inchannel).to(device)
+    model = DVQVAE(obj_inchannel=4).to(device)
 
-    #checkpoint = torch.load("/home/zhaozhe/Pycode/VQVAEtmp/logs2/baseline_mano/9_7/model_ 200_test.pth", map_location=torch.device('cpu'))['network']
-    #model.load_state_dict(checkpoint)
-    # multi-gpu
+
     if device == torch.device("cuda"):
         torch.backends.cudnn.benchmark = True
         device_ids = range(torch.cuda.device_count())
