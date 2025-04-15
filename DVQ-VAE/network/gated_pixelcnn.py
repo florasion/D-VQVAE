@@ -22,7 +22,7 @@ import argparse
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--batch_size", type=int, default=2048)
-parser.add_argument("--epochs", type=int, default=100)
+parser.add_argument("--epochs", type=int, default=200)
 parser.add_argument("--log_interval", type=int, default=100)
 parser.add_argument("-save", action="store_true")
 parser.add_argument("-gen_samples", default=True, action="store_true")
@@ -75,19 +75,16 @@ train, test, and log
 def train():
     train_loss = []
     for batch_idx, (x, label) in enumerate(train_loader):
-        x=x.to('cuda')
-        #print('x',x.size())
-        #x = x.repeat(1, 1, 7)
-        #print('x',x.size())
+        x=x.to('cuda').unsqueeze(2)
+
+        re=torch.cat((x[:,0],x[:,1],x[:,2],x[:,0],x[:,3],x[:,4],x[:,0],x[:,5],x[:,6]),1)
+        x = re.view(-1, 3, 3)
+
         start_time = time.time()
-        #print(x.size())
-        #if args.dataset == 'LATENT_BLOCK':
-        #    x = (x[:, 0]).cuda()
-        #else:
-        #    x = (x[:, 0] * (K-1)).long().cuda()
+
         label = label.cuda()
        
-        # Train PixelCNN with images
+
         logits = model(x, label)
         logits = logits.permute(0, 2, 3, 1).contiguous()
         loss = criterion(
@@ -115,20 +112,17 @@ def test():
     val_loss = []
     with torch.no_grad():
         for batch_idx, (x, label) in enumerate(test_loader):
-            #if args.dataset == 'LATENT_BLOCK':
-            #    x = (x[:, 0]).cuda()
-            #else:
-            #  x = (x[:, 0] * (args.n_embeddings-1)).long().cuda()
-            #print(x)
-            x=x.to('cuda')
-            #x = x.repeat(1, 1, 7)
-            label = label.cuda()
 
+            x=x.to('cuda').unsqueeze(2)
+
+            label = label.cuda()
+            re=torch.cat((x[:,0],x[:,1],x[:,2],x[:,0],x[:,3],x[:,4],x[:,0],x[:,5],x[:,6]),1)
+            x = re.view(-1, 3, 3)
             logits = model(x, label)
             
             
             logits = logits.permute(0, 2, 3, 1).contiguous()
-            #print(logits.size())
+
             loss = criterion(
                 logits.view(-1, args.n_embeddings),
                 x.view(-1)
@@ -144,11 +138,13 @@ def test():
 
 
 def generate_samples(epoch,x_start):
-    label = torch.arange(200).expand(200, 200).contiguous().view(-1)*0
-    #label = torch.zeros(100, 100, dtype=torch.int).view(-1)
     B=x_start.size()[0]
+    x=x_start.to('cuda').unsqueeze(2)
+    #x = x.repeat(1, 1, 7)
+    re=torch.cat((x[:,0],x[:,1],x[:,2],x[:,0],x[:,3],x[:,4],x[:,0],x[:,5],x[:,6]),1)
+    x_start = re.view(-1, 3, 3)
     #print(x_start.size()[0])
-    label = label[:B].to('cuda')
+    label = x_start[:,0,0].to('cuda')
     #x = x.repeat(1, 1, 7)
     print(x_start[0])
     #print(x_start[0,0,:])
@@ -169,7 +165,7 @@ for epoch in range(1, args.epochs):
         LAST_SAVED = epoch
 
         print("Saving model!")
-        torch.save(model.state_dict(), '/data/Model/VQVAE/results/{}_pixelcnn.pt'.format(args.dataset))
+        torch.save(model.state_dict(), './{}_pixelcnn.pt'.format(args.dataset))
     else:
         print("Not saving model! Last saved: {}".format(LAST_SAVED))
     if args.gen_samples:
